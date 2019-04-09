@@ -8,7 +8,7 @@ TODO: what is does, how it does it, tbd
 
 ```
 $ git clone https://github.com/RedisGears/EdgeRealtimeVideoAnalytics.git
-$ cd realtime-video-analytics
+$ cd EdgeRealtimeVideoAnalytics
 # If you don't have it already, install https://git-lfs.github.com/
 $ git lfs install; git lfs checkout
 ```
