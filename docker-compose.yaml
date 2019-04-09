@@ -1,0 +1,42 @@
+version: '3'
+services:
+  redisedge:
+    build: ./redisedge
+    ports:
+      - 6379:6379
+  init:
+    build: ./app
+    depends_on:
+      - redisedge
+    command: ['python3', 'init.py', '--url', 'redis://redisedge:6379']
+  server:
+    build: ./app
+    depends_on:
+      - init
+    ports:
+      - 5000:5000
+    command: ['python3', 'server.py', '--url', 'redis://redisedge:6379']
+  capture:
+    build: ./app
+    depends_on:
+      - init
+    devices:
+      - /dev/video0:/dev/video0
+    command: ['python3', 'capture.py', '--url', 'redis://redisedge:6379']
+  prometheus:
+    build: ./prometheus
+    ports:
+      - 9090:9090
+  prometheus-redistimeseries-adapter:
+    image: redislabs/prometheus-redistimeseries-adapter:master
+    # TODO: freeze version
+    depends_on:
+      - prometheus
+      - init
+    command: ['-redis-address', 'redisedge:6379', '-web.listen-address', '0.0.0.0:9201']
+  grafana:
+    build: ./grafana
+    depends_on:
+      - prometheus
+    ports:
+      - 3000:3000
