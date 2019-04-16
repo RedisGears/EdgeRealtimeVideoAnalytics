@@ -8,21 +8,21 @@ services:
     build: ./app
     depends_on:
       - redisedge
-    command: ['python3', 'init.py', '--url', 'redis://redisedge:6379']
+    command: ['init.py', '--url', 'redis://redisedge:6379']
   server:
     build: ./app
     depends_on:
       - init
     ports:
       - 5000:5000
-    command: ['python3', 'server.py', '--url', 'redis://redisedge:6379']
+    command: ['server.py', '--url', 'redis://redisedge:6379']
   capture:
     build: ./app
     depends_on:
       - init
     devices:
       - /dev/video0:/dev/video0
-    command: ['python3', 'capture.py', '--url', 'redis://redisedge:6379']
+    command: ['capture.py', '--url', 'redis://redisedge:6379']
   prometheus:
     build: ./prometheus
     ports:

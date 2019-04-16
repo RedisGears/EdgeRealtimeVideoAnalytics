@@ -2,7 +2,6 @@
 import cv2
 import redisAI
 import numpy as np
-import traceback
 from PIL import Image
 from PIL import ImageDraw
 
@@ -19,13 +18,13 @@ def downsampleStream(x):
 
     execute('TS.INCRBY', 'camera:0:in_fps', 1, 'RESET', 1)  # Store the input fps count
     ts, _ = map(int, str(x['streamId']).split('-'))         # Extract the timestamp part from the message ID
-    if _next_ts <= ts:                                      # Drop frames until the next timestamp is in the present/past
+    sample_it = _next_ts <= ts
+    if sample_it:                                           # Drop frames until the next timestamp is in the present/past
         _next_ts = ts + _mspf
-        return True
-    return False
+    return sample_it
 
 def process_image(img, height):
-    ''' Resizes a rectangular image to a padded square '''
+    ''' Utility to resize a rectangular image to a padded square '''
     color = (127.5, 127.5, 127.5)
     shape = img.shape[:2]
     ratio = float(height) / max(shape)  # ratio  = old / new
@@ -37,12 +36,12 @@ def process_image(img, height):
     img = cv2.resize(img, new_shape, interpolation=cv2.INTER_AREA)
     img = cv2.copyMakeBorder(img, top, bottom, left, right, cv2.BORDER_CONSTANT, value=color)
     img = np.asarray(img, dtype=np.float32) 
-    img /= 255.0
+    img /= 255.0                        # Normalize 0..255 to 0..1.00
     return img
 
 def runYolo(x):
     ''' Runs the model on an input image using RedisAI '''
-    IMG_SIZE = 736
+    IMG_SIZE = 736                      # Model's input size
 
     # Read the image from the stream's message
     buf = io.BytesIO(x['image'])
@@ -68,24 +67,27 @@ def runYolo(x):
     shape = redisAI.tensorGetDims(classes_tensor)
     buf = redisAI.tensorGetDataAsBlob(classes_tensor)
     classes = np.frombuffer(buf, dtype=np.float32).reshape(shape)
-    people_count = np.unique(classes, return_counts=True)[1][0]  # 0 is people
     boxes_tensor = model_reply[2]
     shape = redisAI.tensorGetDims(boxes_tensor)
     buf = redisAI.tensorGetDataAsBlob(boxes_tensor)
     boxes = np.frombuffer(buf, dtype=np.float32).reshape(shape)
 
+    # Extract the people boxes
     boxes_out = []
+    people_count = 0
     ratio = float(IMG_SIZE) / max(pil_image.width, pil_image.height)  # ratio = old / new
     pad_x = (IMG_SIZE - pil_image.width * ratio) / 2                  # Width padding
     pad_y = (IMG_SIZE - pil_image.height * ratio) / 2                 # Height padding
     for ind, class_val in enumerate(classes):
         if class_val == 0:  # 0 is people
-            top, left, bottom, right = boxes[ind]
+            people_count += 1
             # Descale coordinates back to original image size
+            top, left, bottom, right = boxes[ind]
             x1 = (left - pad_x) / ratio
             x2 = (right - pad_x) / ratio
             y1 = (top - pad_y) / ratio
             y2 = (bottom - pad_y) / ratio
+            # Store boxes as a flat list
             boxes_out += [x1,y1,x2,y2]
     return x['streamId'], people_count, boxes_out
 

@@ -1,8 +1,9 @@
 FROM python:3.7.3
 
-ENV PIP_LIBS "numpy pillow opencv-python redis flask"
-RUN set -ex; \
-    pip install $PIP_LIBS;
+WORKDIR /app
+ADD . /app
 
-WORKDIR /src
-ADD . /src
+RUN set -ex; \
+    pip install -r requirements.txt;
+
+ENTRYPOINT [ "python3" ]

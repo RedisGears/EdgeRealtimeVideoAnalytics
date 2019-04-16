@@ -23,12 +23,13 @@ class Webcam:
         # Read image
         ret_val, img0 = self.cam.read()
         if not ret_val:  # Try to stupidly loop over video files
-            self.cam = cv2.VideoCapture(self.infile)
-            ret_val, img0 = self.cam.read()
+           self.cam = cv2.VideoCapture(self.infile)
+           ret_val, img0 = self.cam.read()
         assert ret_val, 'Webcam Error'
 
         # Preprocess
-        img = cv2.flip(img0, 1)
+        img = img0
+        # img = cv2.flip(img, 1)
 
         return self.count, img
 
