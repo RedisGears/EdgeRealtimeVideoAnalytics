@@ -23,12 +23,12 @@ class RedisImageStream(object):
         cmsg, bmsg = p.execute()
         if cmsg:
             last_id = cmsg[0][0].decode('utf-8')
-            label = '{}:{} '.format(self.camera, last_id)
+            label = f'{self.camera}:{last_id}'
             data = io.BytesIO(cmsg[0][1][self.field])
             img = Image.open(data)
             if bmsg:
                 boxes = np.fromstring(bmsg[0][1]['boxes'.encode('utf-8')][1:-1], sep=',')
-                label += 'people: {}'.format(bmsg[0][1]['people'.encode('utf-8')].decode('utf-8'))
+                label += ' people: {}'.format(bmsg[0][1]['people'.encode('utf-8')].decode('utf-8'))
                 for box in range(int(bmsg[0][1]['people'.encode('utf-8')])):  # Draw boxes
                     x1 = boxes[box*4]
                     y1 = boxes[box*4+1]
