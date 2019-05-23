@@ -20,9 +20,12 @@ services:
     build: ./app
     depends_on:
       - init
-    devices:
-      - /dev/video0:/dev/video0
-    command: ['capture.py', '--url', 'redis://redisedge:6379']
+    # To capture from a webcam, uncomment the next lines
+    # devices:
+    #  - /dev/video0:/dev/video0
+    # command: ['capture.py', '--url', 'redis://redisedge:6379']
+    command: ['capture.py', '--url', 'redis://redisedge:6379', 'data/countvoncount.mp4']
+   
   prometheus:
     build: ./prometheus
     ports:
@@ -32,7 +35,8 @@ services:
     # TODO: freeze version
     depends_on:
       - prometheus
-      - init
+    ports:
+      - 9201:9201
     command: ['-redis-address', 'redisedge:6379', '-web.listen-address', '0.0.0.0:9201']
   grafana:
     build: ./grafana
