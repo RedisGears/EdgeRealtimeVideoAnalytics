@@ -2,7 +2,7 @@
 
 An example of using Redis Streams, RedisGears, RedisAI, and RedisTimeSeries for Real-time Video Analytics (i.e. counting people).
 
-Given [this input videa](https://youtu.be/VqkMaIk6fKc?t=16), the final output looks something like this:
+Given [this input video](https://youtu.be/VqkMaIk6fKc?t=16), the final output looks something like this:
 
 ![demo](demo.gif)
 
