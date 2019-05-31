@@ -24,6 +24,8 @@ The process is a pipeline of operations that go as follows:
 3. A video web server renders the final image based on real-time data from Redis' Streams.
 4. Time series are exported from Redis to Prometheus, enabling visualization with Grafana's dashboards.
 
+See ["My Other Stack is RedisEdge"](https://redislabs.com/blog/my-other-stack-is-redisedge/) for a wordy overview.
+
 ### The RedisEdge Stack
 
 The RedisEdge stack consists of the latest Redis stable release and select RedisLabs modules intended to be used in Edge computing. For more information refer to [RedisEdge](https://github.com/RedisLabs/redis-edge-docker).
