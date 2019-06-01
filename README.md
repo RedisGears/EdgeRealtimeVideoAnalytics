@@ -25,6 +25,7 @@ The process is a pipeline of operations that go as follows:
 4. Time series are exported from Redis to Prometheus, enabling visualization with Grafana's dashboards.
 
 See ["My Other Stack is RedisEdge"](https://redislabs.com/blog/my-other-stack-is-redisedge/) for a wordy overview.
+Watch ["RedisConf19 Keynote Day 2"](https://www.youtube.com/watch?v=t1U7ulz1_Dg&feature=youtu.be&t=4767) for a video demonstration.
 
 ### The RedisEdge Stack
 
