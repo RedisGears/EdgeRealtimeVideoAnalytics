@@ -1,6 +1,6 @@
 FROM redislabs/redisedge:latest
 
-ENV DEPS "python python-pip libglib2.0-0 libsm6 libxrender1 libxext6"
+ENV DEPS "python python-pip libglib2.0-0 libsm6 libxrender1 libxext6 libgomp1"
 RUN set -ex; \
     apt-get update; \
     apt-get install -y --no-install-recommends $DEPS;
