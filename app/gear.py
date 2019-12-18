@@ -1,9 +1,12 @@
 # A Redis gear for orchestrating realtime video analytics
+import io
 import cv2
 import redisAI
 import numpy as np
 from time import time
 from PIL import Image
+
+from redisgears import executeCommand as execute
 
 # Globals for downsampling
 _mspf = 1000 / 10.0      # Msecs per frame (initialized with 10.0 FPS)
