@@ -1,3 +1,6 @@
+[![license](https://img.shields.io/github/license/RedisGears/EdgeRealtimeVideoAnalytics.svg)](https://github.com/RedisGears/EdgeRealtimeVideoAnalytics)
+[![CircleCI](https://circleci.com/gh/RedisGears/EdgeRealtimeVideoAnalytics/tree/master.svg?style=svg)](https://circleci.com/gh/RedisGears/EdgeRealtimeVideoAnalytics/tree/master)
+
 # RedisEdge Real-time Video Analytics
 
 An example of using Redis Streams, RedisGears, RedisAI, and RedisTimeSeries for Real-time Video Analytics (i.e. counting people).
