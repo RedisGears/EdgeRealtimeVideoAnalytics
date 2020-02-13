@@ -195,8 +195,7 @@ def storeResults(x):
 
     # Add a sample to the output people and fps timeseries
     res_msec = int(str(res_id).split('-')[0])
-    ts = ref_msec // 1000
-    execute('TS.ADD', 'camera:0:people', ts, people)
+    execute('TS.ADD', 'camera:0:people', ref_msec, people)
     execute('TS.INCRBY', 'camera:0:out_fps', 1, 'RESET', 1)
 
     # Adjust mspf to the moving average duration
@@ -208,7 +207,7 @@ def storeResults(x):
     # Record profiler steps
     for name in prf.names:
         current = prf.data[name].current
-        execute('TS.ADD', 'camera:0:prf_{}'.format(name), ts, current)
+        execute('TS.ADD', 'camera:0:prf_{}'.format(name), ref_msec, current)
 
     prf.add('store')
     # Make an arithmophilial homage to Count von Count for storage in the execution log

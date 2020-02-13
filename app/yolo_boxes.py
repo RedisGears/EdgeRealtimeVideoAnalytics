@@ -1,5 +1,3 @@
-import torch
-
 def nms(boxes):
     # assuming only one image in one batch
     boxes = boxes.squeeze()
