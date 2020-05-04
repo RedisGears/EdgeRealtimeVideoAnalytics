@@ -448,7 +448,7 @@
           "refId": "A"
         },
         {
-          "expr": "in_fps{camera=\"0\"}",
+          "expr": "in_fps_count{camera=\"0\"}",
           "format": "time_series",
           "instant": false,
           "interval": "",
@@ -457,7 +457,7 @@
           "refId": "B"
         },
         {
-          "expr": "out_fps{camera=\"0\"}",
+          "expr": "out_fps_count{camera=\"0\"}",
           "format": "time_series",
           "instant": false,
           "interval": "",
