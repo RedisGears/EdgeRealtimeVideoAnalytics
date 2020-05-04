@@ -1,21 +1,21 @@
 version: '3'
 services:
-  redisedge:
-    build: ./redisedge
+  redismod:
+    build: ./redismod
     ports:
       - 6379:6379
   init:
     build: ./app
     depends_on:
-      - redisedge
-    command: ['init.py', '--url', 'redis://redisedge:6379']
+      - redismod
+    command: ['init.py', '--url', 'redis://redismod:6379']
   server:
     build: ./app
     depends_on:
       - init
     ports:
       - 5000:5000
-    command: ['server.py', '--url', 'redis://redisedge:6379']
+    command: ['server.py', '--url', 'redis://redismod:6379']
   capture:
     build: ./app
     depends_on:
@@ -23,8 +23,8 @@ services:
     # To capture from a webcam, uncomment the next lines
     # devices:
     #  - /dev/video0:/dev/video0
-    # command: ['capture.py', '--url', 'redis://redisedge:6379']
-    command: ['capture.py', '--url', 'redis://redisedge:6379', 'data/countvoncount.mp4']
+    # command: ['capture.py', '--url', 'redis://redismod:6379']
+    command: ['capture.py', '--url', 'redis://redismod:6379', 'data/countvoncount.mp4']
    
   prometheus:
     build: ./prometheus
@@ -37,7 +37,7 @@ services:
       - prometheus
     ports:
       - 9201:9201
-    command: ['-redis-address', 'redisedge:6379', '-web.listen-address', '0.0.0.0:9201']
+    command: ['-redis-address', 'redismod:6379', '-web.listen-address', '0.0.0.0:9201']
   grafana:
     build: ./grafana
     depends_on:
