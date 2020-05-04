@@ -91,7 +91,7 @@ prf = Profiler()
 def downsampleStream(x):
     ''' Drops input frames to match FPS '''
     global _mspf, _next_ts
-    # execute('TS.INCRBY', 'camera:0:in_fps', 1)  # Store the input fps count
+    execute('TS.INCRBY', 'camera:0:in_fps', 1)  # Store the input fps count
     ts, _ = map(int, str(x['id']).split('-'))         # Extract the timestamp part from the message ID
     sample_it = _next_ts <= ts
     if sample_it:                                           # Drop frames until the next timestamp is in the present/past
@@ -196,7 +196,7 @@ def storeResults(x):
     # Add a sample to the output people and fps timeseries
     res_msec = int(str(res_id).split('-')[0])
     execute('TS.ADD', 'camera:0:people', ref_msec, people)
-    # execute('TS.INCRBY', 'camera:0:out_fps', 1)
+    execute('TS.INCRBY', 'camera:0:out_fps', 1)
 
     # Adjust mspf to the moving average duration
     total_duration = res_msec - ref_msec
@@ -207,7 +207,7 @@ def storeResults(x):
     # Record profiler steps
     for name in prf.names:
         current = prf.data[name].current
-        # execute('TS.ADD', 'camera:0:prf_{}'.format(name), ref_msec, current)
+        execute('TS.ADD', 'camera:0:prf_{}'.format(name), ref_msec, current)
 
     prf.add('store')
     # Make an arithmophilial homage to Count von Count for storage in the execution log
