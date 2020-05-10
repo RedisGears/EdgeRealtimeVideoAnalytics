@@ -30,16 +30,16 @@ if __name__ == '__main__':
 
     # Load the RedisAI model
     print('Loading model - ', end='')
-    with open('models/tiny-yolo-voc.pb', 'rb') as f:
+    with open('models/yolov3-spp-traced.pt', 'rb') as f:
         model = f.read()
-        res = conn.execute_command('AI.MODELSET', 'yolo:model', 'TF', args.device, 'INPUTS', 'input', 'OUTPUTS', 'output', model)
+        res = conn.execute_command('AI.MODELSET', 'yolo:model', 'TORCH', args.device, 'INPUTS', 'input', 'OUTPUTS', 'output', 'BLOB', model)
         print(res)
 
     # Load the PyTorch post processing boxes script
     print('Loading script - ', end='')
     with open('yolo_boxes.py', 'rb') as f:
         script = f.read()
-        res = conn.execute_command('AI.SCRIPTSET', 'yolo:script', args.device, script)
+        res = conn.execute_command('AI.SCRIPTSET', 'yolo:script', args.device, 'SOURCE', script)
         print(res)
 
     print('Creating timeseries keys and downsampling rules - ', end='')

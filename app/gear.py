@@ -91,33 +91,52 @@ prf = Profiler()
 def downsampleStream(x):
     ''' Drops input frames to match FPS '''
     global _mspf, _next_ts
-    execute('TS.INCRBY', 'camera:0:in_fps', 1)  # Store the input fps count
+    # execute('TS.INCRBY', 'camera:0:in_fps', 1, 'TIMESTAMP', '*')  # Store the input fps count
     ts, _ = map(int, str(x['id']).split('-'))         # Extract the timestamp part from the message ID
     sample_it = _next_ts <= ts
     if sample_it:                                           # Drop frames until the next timestamp is in the present/past
         _next_ts = ts + _mspf
     return sample_it
 
-def process_image(img, height):
-    ''' Utility to resize a rectangular image to a padded square (letterbox) '''
-    color = (127.5, 127.5, 127.5)
-    shape = img.shape[:2]
-    ratio = float(height) / max(shape)  # ratio  = old / new
-    new_shape = (int(round(shape[1] * ratio)), int(round(shape[0] * ratio)))
-    dw = (height - new_shape[0]) / 2    # Width padding
-    dh = (height - new_shape[1]) / 2    # Height padding
-    top, bottom = int(round(dh - 0.1)), int(round(dh + 0.1))
-    left, right = int(round(dw - 0.1)), int(round(dw + 0.1))
-    img = cv2.resize(img, new_shape, interpolation=cv2.INTER_LINEAR)
-    img = cv2.copyMakeBorder(img, top, bottom, left, right, cv2.BORDER_CONSTANT, value=color)
-    img = np.asarray(img, dtype=np.float32)
-    img /= 255.0                        # Normalize 0..255 to 0..1.00
-    return img
+ # ''' Utility to resize a rectangular image to a padded square (letterbox) '''
+    # color = (127.5, 127.5, 127.5)
+    # shape = img.shape[:2]
+    # ratio = float(height) / max(shape)  # ratio  = old / new
+    # new_shape = (int(round(shape[1] * ratio)), int(round(shape[0] * ratio)))
+    # dw = (height - new_shape[0]) / 2    # Width padding
+    # dh = (height - new_shape[1]) / 2    # Height padding
+    # top, bottom = int(round(dh - 0.1)), int(round(dh + 0.1))
+    # left, right = int(round(dw - 0.1)), int(round(dw + 0.1))
+    # img = cv2.resize(img, new_shape, interpolation=cv2.INTER_LINEAR)
+    # img = cv2.copyMakeBorder(img, top, bottom, left, right, cv2.BORDER_CONSTANT, value=color)
+    # img = np.asarray(img, dtype=np.float32)
+    # img /= 255.0                        # Normalize 0..255 to 0..1.00
+    # return img
+
+def process_image(img, inp_dim):
+    '''resize image with unchanged aspect ratio using padding'''
+    img_w, img_h = img.shape[1], img.shape[0]
+    w, h = inp_dim
+    new_w = int(img_w * min(w / img_w, h / img_h))
+    new_h = int(img_h * min(w / img_w, h / img_h))
+    resized_image = cv2.resize(img, (new_w, new_h), interpolation=cv2.INTER_LINEAR)
+
+    canvas = np.full((h, w, 3), 128)
+
+    canvas[(h - new_h) // 2:(h - new_h) // 2 + new_h, (w - new_w) // 2:(w - new_w) // 2 + new_w, :] = resized_image
+
+    # Put channels first
+    canvas = np.transpose(canvas, (2, 0, 1))
+
+    # Add batch dimension of 1, convert to float32 and normalize
+    canvas = canvas[None, :].astype(np.float32) / 255.0
+    return canvas
+
 
 def runYolo(x):
     ''' Runs the model on an input image from the stream '''
     global prf
-    IMG_SIZE = 416     # Model's input image size
+    IMG_SIZE = 512     # Model's input image size
     prf.start()        # Start a new profiler iteration
 
     # log('read')
@@ -130,10 +149,9 @@ def runYolo(x):
 
     # log('resize')
     # Resize, normalize and tensorize the image for the model (number of images, width, height, channels)
-    image = process_image(numpy_img, IMG_SIZE)
+    image = process_image(numpy_img, (IMG_SIZE, IMG_SIZE))
     # log('tensor')
-    img_ba = bytearray(image.tobytes())
-    image_tensor = redisAI.createTensorFromBlob('FLOAT', [1, IMG_SIZE, IMG_SIZE, 3], img_ba)
+    image_tensor = redisAI.createTensorFromBlob('FLOAT', [1, 3, IMG_SIZE, IMG_SIZE], bytearray(image.tobytes()))
     prf.add('resize')
 
     # log('model')
@@ -196,7 +214,7 @@ def storeResults(x):
     # Add a sample to the output people and fps timeseries
     res_msec = int(str(res_id).split('-')[0])
     execute('TS.ADD', 'camera:0:people', ref_msec, people)
-    execute('TS.INCRBY', 'camera:0:out_fps', 1)
+    # execute('TS.INCRBY', 'camera:0:out_fps', 1, 'TIMESTAMP', '*')
 
     # Adjust mspf to the moving average duration
     total_duration = res_msec - ref_msec
