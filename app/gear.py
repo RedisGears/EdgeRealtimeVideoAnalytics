@@ -91,7 +91,10 @@ prf = Profiler()
 def downsampleStream(x):
     ''' Drops input frames to match FPS '''
     global _mspf, _next_ts
-    execute('TS.INCRBY', 'camera:0:in_fps', 1)  # Store the input fps count
+    try:
+        execute('TS.INCRBY', 'camera:0:in_fps', 1)  # Store the input fps count
+    except:
+        pass
     ts, _ = map(int, str(x['id']).split('-'))         # Extract the timestamp part from the message ID
     sample_it = _next_ts <= ts
     if sample_it:                                           # Drop frames until the next timestamp is in the present/past
@@ -218,8 +221,11 @@ def storeResults(x):
 
     # Add a sample to the output people and fps timeseries
     res_msec = int(str(res_id).split('-')[0])
-    execute('TS.ADD', 'camera:0:people', ref_msec, people)
-    execute('TS.INCRBY', 'camera:0:out_fps', 1)
+    try:
+        execute('TS.ADD', 'camera:0:people', ref_msec, people)
+        execute('TS.INCRBY', 'camera:0:out_fps', 1)
+    except:
+        pass
 
     # Adjust mspf to the moving average duration
     total_duration = res_msec - ref_msec
