@@ -91,29 +91,37 @@ prf = Profiler()
 def downsampleStream(x):
     ''' Drops input frames to match FPS '''
     global _mspf, _next_ts
-    # execute('TS.INCRBY', 'camera:0:in_fps', 1, 'TIMESTAMP', '*')  # Store the input fps count
+    execute('TS.INCRBY', 'camera:0:in_fps', 1)  # Store the input fps count
     ts, _ = map(int, str(x['id']).split('-'))         # Extract the timestamp part from the message ID
     sample_it = _next_ts <= ts
     if sample_it:                                           # Drop frames until the next timestamp is in the present/past
         _next_ts = ts + _mspf
     return sample_it
 
- # ''' Utility to resize a rectangular image to a padded square (letterbox) '''
-    # color = (127.5, 127.5, 127.5)
-    # shape = img.shape[:2]
-    # ratio = float(height) / max(shape)  # ratio  = old / new
-    # new_shape = (int(round(shape[1] * ratio)), int(round(shape[0] * ratio)))
-    # dw = (height - new_shape[0]) / 2    # Width padding
-    # dh = (height - new_shape[1]) / 2    # Height padding
-    # top, bottom = int(round(dh - 0.1)), int(round(dh + 0.1))
-    # left, right = int(round(dw - 0.1)), int(round(dw + 0.1))
-    # img = cv2.resize(img, new_shape, interpolation=cv2.INTER_LINEAR)
-    # img = cv2.copyMakeBorder(img, top, bottom, left, right, cv2.BORDER_CONSTANT, value=color)
-    # img = np.asarray(img, dtype=np.float32)
-    # img /= 255.0                        # Normalize 0..255 to 0..1.00
-    # return img
+def clip_coords(boxes, img_shape):
+    # Clip bounding xyxy bounding boxes to image shape (height, width)
+    boxes[:, 0] = np.clip(boxes[:, 0], 0, img_shape[1])  # x1
+    boxes[:, 1] = np.clip(boxes[:, 1], 0, img_shape[0])  # y1
+    boxes[:, 2] = np.clip(boxes[:, 2], 0, img_shape[1])  # x2
+    boxes[:, 3] = np.clip(boxes[:, 3], 0, img_shape[0])  # y2
 
-def process_image(img, inp_dim):
+
+def scale_coords(img1_shape, coords, img0_shape, ratio_pad=None):
+    # Rescale coords (xyxy) from img1_shape to img0_shape
+    if ratio_pad is None:  # calculate from img0_shape
+        gain = max(img1_shape) / max(img0_shape)  # gain  = old / new
+        pad = (img1_shape[1] - img0_shape[1] * gain) / 2, (img1_shape[0] - img0_shape[0] * gain) / 2  # wh padding
+    else:
+        gain = ratio_pad[0][0]
+        pad = ratio_pad[1]
+
+    coords[:, [0, 2]] -= pad[0]  # x padding
+    coords[:, [1, 3]] -= pad[1]  # y padding
+    coords[:, :4] /= gain
+    clip_coords(coords, img0_shape)
+    return coords
+
+def letterbox_image(img, inp_dim):
     '''resize image with unchanged aspect ratio using padding'''
     img_w, img_h = img.shape[1], img.shape[0]
     w, h = inp_dim
@@ -149,9 +157,9 @@ def runYolo(x):
 
     # log('resize')
     # Resize, normalize and tensorize the image for the model (number of images, width, height, channels)
-    image = process_image(numpy_img, (IMG_SIZE, IMG_SIZE))
+    image_tensor = letterbox_image(numpy_img, (IMG_SIZE, IMG_SIZE))
     # log('tensor')
-    image_tensor = redisAI.createTensorFromBlob('FLOAT', [1, 3, IMG_SIZE, IMG_SIZE], bytearray(image.tobytes()))
+    image_tensor = redisAI.createTensorFromBlob('FLOAT', image_tensor.shape, bytearray(image_tensor.tobytes()))
     prf.add('resize')
 
     # log('model')
@@ -165,7 +173,7 @@ def runYolo(x):
 
     # log('script')
     # The model's output is processed with a PyTorch script for non maxima suppression
-    scriptRunner = redisAI.createScriptRunner('yolo:script', 'boxes_from_tf')
+    scriptRunner = redisAI.createScriptRunner('yolo:script', 'boxes_from_yolo')
     redisAI.scriptRunnerAddInput(scriptRunner, model_output)
     redisAI.scriptRunnerAddOutput(scriptRunner)
     script_reply = redisAI.scriptRunnerRun(scriptRunner)
@@ -175,26 +183,23 @@ def runYolo(x):
     # The script outputs bounding boxes
     shape = redisAI.tensorGetDims(script_reply)
     buf = redisAI.tensorGetDataAsBlob(script_reply)
+    # Get boxes and re-scale them
     boxes = np.frombuffer(buf, dtype=np.float32).reshape(shape)
+    boxes = scale_coords([IMG_SIZE, IMG_SIZE], boxes, numpy_img.shape)
 
     # Iterate boxes to extract the people
-    ratio = float(IMG_SIZE) / max(pil_image.width, pil_image.height)  # ratio = old / new
-    pad_x = (IMG_SIZE - pil_image.width * ratio) / 2                  # Width padding
-    pad_y = (IMG_SIZE - pil_image.height * ratio) / 2                 # Height padding
     boxes_out = []
     people_count = 0
-    for box in boxes[0]:
+    for box in boxes:
         if box[4] == 0.0:  # Remove zero-confidence detections
             continue
-        if box[-1] != 14:  # Ignore detections that aren't people
+        if box[-1] != 0:  # Ignore detections that aren't people
             continue
         people_count += 1
-
-        # Descale bounding box coordinates back to original image size
-        x1 = (IMG_SIZE * (box[0] - 0.5 * box[2]) - pad_x) / ratio
-        y1 = (IMG_SIZE * (box[1] - 0.5 * box[3]) - pad_y) / ratio
-        x2 = (IMG_SIZE * (box[0] + 0.5 * box[2]) - pad_x) / ratio
-        y2 = (IMG_SIZE * (box[1] + 0.5 * box[3]) - pad_y) / ratio
+        x1 = box[0]
+        y1 = box[1]
+        x2 = box[2]
+        y2 = box[3]
 
         # Store boxes as a flat list
         boxes_out += [x1,y1,x2,y2]
@@ -214,7 +219,7 @@ def storeResults(x):
     # Add a sample to the output people and fps timeseries
     res_msec = int(str(res_id).split('-')[0])
     execute('TS.ADD', 'camera:0:people', ref_msec, people)
-    # execute('TS.INCRBY', 'camera:0:out_fps', 1, 'TIMESTAMP', '*')
+    execute('TS.INCRBY', 'camera:0:out_fps', 1)
 
     # Adjust mspf to the moving average duration
     total_duration = res_msec - ref_msec
