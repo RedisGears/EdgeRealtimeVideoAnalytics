@@ -37,3 +37,13 @@ services:
       - prometheus
     ports:
       - 3000:3000
+  capture:
+    build: ./app
+    network_mode: host
+    depends_on:
+      - init
+    # To capture from a webcam, uncomment the next lines
+    # devices:
+    #  - /dev/video0:/dev/video0
+    # command: ['capture.py', '--url', 'redis://redismod:6379']
+    command: ['capture.py', 'data/countvoncount.mp4']
