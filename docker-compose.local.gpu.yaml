@@ -1,0 +1,49 @@
+version: '3'
+services:
+  init:
+    build: ./app
+    network_mode: host
+    command: ['init.py', '--url', 'redis://localhost:6379', '--device', 'GPU']
+  server:
+    build: ./app
+    network_mode: host
+    depends_on:
+      - init
+    ports:
+      - 5000:5000
+    command: ['server.py', '--url', 'redis://localhost:6379']
+  prometheus:
+    build:
+      context: ./prometheus
+      dockerfile: Dockerfile-local
+    network_mode: host
+    ports:
+      - 9090:9090
+  prometheus-redistimeseries-adapter:
+    image: redislabs/prometheus-redistimeseries-adapter:master
+    # TODO: freeze version
+    network_mode: host
+    depends_on:
+      - prometheus
+    ports:
+      - 9201:9201
+    command: ['-redis-address', 'localhost:6379', '-web.listen-address', '0.0.0.0:9201']
+  grafana:
+    build:
+      context: ./grafana
+      dockerfile: Dockerfile-local
+    network_mode: host
+    depends_on:
+      - prometheus
+    ports:
+      - 3000:3000
+  capture:
+    build: ./app
+    network_mode: host
+    depends_on:
+      - init
+    # To capture from a webcam, uncomment the next lines
+    # devices:
+    #  - /dev/video0:/dev/video0
+    # command: ['capture.py', '--url', 'redis://redismod:6379']
+    command: ['capture.py', 'data/countvoncount.mp4']

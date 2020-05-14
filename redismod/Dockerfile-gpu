@@ -4,7 +4,7 @@ FROM redisai/redisai:edge-gpu as ai
 
 ENV LD_LIBRARY_PATH /usr/lib/redis/modules
 
-COPY --from=gears /var/opt/redislabs/* /var/opt/redislabs/
+COPY --from=gears /var/opt/redislabs/ /var/opt/redislabs/
 COPY --from=timeseries ${LD_LIBRARY_PATH}/*.so ${LD_LIBRARY_PATH}/
 
 # ENV PYTHONPATH /usr/lib/redis/modules/deps/cpython/Lib
