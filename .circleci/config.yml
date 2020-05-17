@@ -4,7 +4,7 @@ jobs:
   test:
     machine:
       enabled: true
-      image: ubuntu-1804
+      image: ubuntu-1604:201903-01
     steps:
       - checkout
       - run:
