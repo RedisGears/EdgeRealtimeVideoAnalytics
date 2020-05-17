@@ -4,7 +4,7 @@ jobs:
   test:
     machine:
       enabled: true
-      image: ubuntu-1604:201903-01
+      image: ubuntu-1804
     steps:
       - checkout
       - run:
@@ -13,11 +13,11 @@ jobs:
             sudo apt-get -qq update -y
             sudo apt-get -q install -y curl ca-certificates wget make
             (cd ..; git clone https://github.com/antirez/redis.git; cd redis; git checkout 5.0.8; make -j$(nproc); sudo make install)
-            SUDO=sudo make setup
       - run:
-          name: Test
+          name: Docker up
           command: |
-            make test VERBOSE=1
+            docker-compose up
+
 workflows:
   version: 2
   build_and_package:
