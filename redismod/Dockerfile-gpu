@@ -1,5 +1,5 @@
-FROM redislabs/redistimeseries:edge as timeseries
-FROM redislabs/redisgears:edge as gears
+FROM redisfab/redistimeseries-bionic:edge-x64 as timeseries
+FROM redisfab/redisgears-bionic:1.0.0-x64 as gears
 FROM redisai/redisai:edge-gpu as ai
 
 ENV LD_LIBRARY_PATH /usr/lib/redis/modules
