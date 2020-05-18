@@ -3,6 +3,9 @@ FROM redisfab/redisgears-bionic:1.0.0-x64 as gears
 FROM redisai/redisai:edge-gpu as ai
 
 ENV LD_LIBRARY_PATH /usr/lib/redis/modules
+ENV NVIDIA_VISIBLE_DEVICES all
+ENV NVIDIA_DRIVER_CAPABILITIES compute,utility
+
 
 COPY --from=gears /var/opt/redislabs/ /var/opt/redislabs/
 COPY --from=timeseries ${LD_LIBRARY_PATH}/*.so ${LD_LIBRARY_PATH}/
@@ -19,3 +22,4 @@ RUN set -ex; \
     apt-get update; \
     apt-get install -y --no-install-recommends $DEPS; \
     chmod +x /usr/lib/redis/modules/redisai.so
+
