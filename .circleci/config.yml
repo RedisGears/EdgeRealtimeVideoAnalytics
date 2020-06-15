@@ -16,6 +16,13 @@ jobs:
           name: Docker up
           command: |
             docker-compose up -d
+      - run:
+          name: Run capture
+          command: |
+            virtualenv venv
+            source venv/bin/activate
+            pip install -r app/requirements.txt
+            python capture.py
 
 workflows:
   version: 2
