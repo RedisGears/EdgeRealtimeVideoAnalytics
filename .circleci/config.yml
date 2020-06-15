@@ -15,7 +15,6 @@ jobs:
             sudo add-apt-repository -y ppa:deadsnakes/ppa
             sudo apt-get -qq update -y
             sudo apt-get -q install -y python3.6
-            python3 –V
       - run:
           name: Docker up
           command: |
