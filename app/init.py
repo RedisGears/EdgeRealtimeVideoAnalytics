@@ -56,7 +56,12 @@ if __name__ == '__main__':
             res.append(conn.execute_command('TS.CREATERULE', '{}:people'.format(input_stream_key), '{}:people:{}:{}m'.format(input_stream_key, a, w), 'AGGREGATION', a, w*60))
     # Set up fps timeseries keys
     res.append(conn.execute_command('TS.CREATE', '{}:in_fps'.format(input_stream_key), *labels, 'in_fps'))
+    res.append(conn.execute_command('TS.CREATE', '{}:in_fps_count'.format(input_stream_key), *labels, 'in_fps_count'))
+    res.append(conn.execute_command('TS.CREATERULE', '{}:in_fps'.format(input_stream_key), '{}:in_fps_count'.format(input_stream_key), 'AGGREGATION', 'count', 1000))
     res.append(conn.execute_command('TS.CREATE', '{}:out_fps'.format(input_stream_key), *labels, 'out_fps'))
+    res.append(conn.execute_command('TS.CREATE', '{}:out_fps_count'.format(input_stream_key), *labels, 'out_fps_count'))
+    res.append(conn.execute_command('TS.CREATERULE', '{}:out_fps'.format(input_stream_key), '{}:out_fps_count'.format(input_stream_key), 'AGGREGATION', 'count', 1000))
+
     # Set up profiler timeseries keys
     metrics = ['read', 'resize', 'model', 'script', 'boxes', 'store', 'total']
     for m in metrics:
@@ -67,7 +72,7 @@ if __name__ == '__main__':
     print('Loading gear - ', end='')
     with open('gear.py', 'rb') as f:
         gear = f.read()
-        res = conn.execute_command('RG.PYEXECUTE', gear)
+        res = conn.execute_command('RG.PYEXECUTE', gear, "REQUIREMENTS", "opencv-python", "Pillow")
         print(res)
 
     # Lastly, set a key that indicates initialization has been performed

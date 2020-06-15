@@ -48,7 +48,8 @@ class RedisImageStream(object):
 def gen(stream):
     while True:
         frame = stream.get_last()
-        yield (b'--frame\r\n'
+        if frame is not None:
+            yield (b'--frame\r\n'
                b'Pragma-directive: no-cache\r\n'
                b'Cache-directive: no-cache\r\n'
                b'Cache-control: no-cache\r\n'

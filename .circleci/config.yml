@@ -11,21 +11,11 @@ jobs:
           name: System Setup
           command: |
             sudo apt-get -qq update -y
-            sudo apt-get -q install -y software-properties-common curl ca-certificates wget make 
-            sudo add-apt-repository -y ppa:deadsnakes/ppa
-            sudo apt-get -qq update -y
-            sudo apt-get -q install -y python3.6
+            sudo apt-get -q install -y software-properties-common curl ca-certificates wget make
       - run:
           name: Docker up
           command: |
             docker-compose up -d
-      - run:
-          name: Run capture
-          command: |
-            virtualenv -p python3.6 venv
-            source venv/bin/activate
-            pip3 install -r app/requirements.txt
-            python3 app/capture.py
 
 workflows:
   version: 2
