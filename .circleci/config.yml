@@ -11,7 +11,11 @@ jobs:
           name: System Setup
           command: |
             sudo apt-get -qq update -y
-            sudo apt-get -q install -y curl ca-certificates wget make python3.6
+            sudo apt-get -q install -y software-properties-common curl ca-certificates wget make 
+            sudo add-apt-repository ppa:deadsnakes/ppa
+            sudo apt-get -qq update -y
+            sudo apt install python3.6
+            python ––version
       - run:
           name: Docker up
           command: |
