@@ -12,11 +12,10 @@ jobs:
           command: |
             sudo apt-get -qq update -y
             sudo apt-get -q install -y curl ca-certificates wget make
-        #    (cd ..; git clone https://github.com/antirez/redis.git; cd redis; git checkout 5.0.8; make -j$(nproc); sudo make install)
       - run:
           name: Docker up
           command: |
-            docker-compose up
+            docker-compose up -d
 
 workflows:
   version: 2
