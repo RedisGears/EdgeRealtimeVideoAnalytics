@@ -1,7 +1,7 @@
 [![license](https://img.shields.io/github/license/RedisGears/EdgeRealtimeVideoAnalytics.svg)](https://github.com/RedisGears/EdgeRealtimeVideoAnalytics)
 [![CircleCI](https://circleci.com/gh/RedisGears/EdgeRealtimeVideoAnalytics/tree/master.svg?style=svg)](https://circleci.com/gh/RedisGears/EdgeRealtimeVideoAnalytics/tree/master)
 [![Forum](https://img.shields.io/badge/Forum-RedisGears-blue)](https://forum.redislabs.com/c/modules/redisgears)
-[![Gitter](https://badges.gitter.im/RedisLabs/RedisGears.svg)](https://gitter.im/RedisLabs/RedisGears?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
+[![Discord](https://img.shields.io/discord/697882427875393627?style=flat-square)](https://discord.gg/6yaVTtp)
 
 # RedisEdge Real-time Video Analytics
 
