@@ -1,5 +1,5 @@
 Flask==1.0.2
 numpy==1.16.3
-opencv-python>=4.0.1.23
+opencv-python==4.0.1.23
 Pillow==6.2.2
 redis==3.2.1
