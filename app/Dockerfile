@@ -1,4 +1,4 @@
-FROM python:3.7.3
+FROM ajeetraina/opencv4-python3
 
 WORKDIR /app
 ADD . /app
