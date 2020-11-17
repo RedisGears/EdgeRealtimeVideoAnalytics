@@ -1,4 +1,4 @@
-FROM redislabs/redisedge:latest
+FROM redislabs/redismod:latest
 
 ENV DEPS "python python3-pip python3-setuptools libglib2.0-0 libsm6 libxrender1 libxext6 libgomp1"
 RUN set -ex; \
@@ -10,7 +10,7 @@ RUN set -ex; \
 
 ADD ./requirements.txt /tmp/requirements.txt
 RUN set -ex; \
-    cd /opt/redislabs/lib/modules/python3; \
+    cd /var/opt/redislabs/modules/rg/python3; \
     pipenv run pip3 install -r /tmp/requirements.txt;
 
 ADD ./redisedge.conf /usr/local/etc/redisedge.conf

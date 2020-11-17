@@ -48,7 +48,7 @@ class Video:
         if self.isFile:
             delta = time.time() - self.ts
             self.sma.add(delta)
-            time.sleep(max(0,(1.0 - self.sma.current*self.fps)/self.fps))
+            time.sleep(max(0,(1 - self.sma.current*self.fps)/self.fps))
             self.ts = time.time()
 
         # Read image

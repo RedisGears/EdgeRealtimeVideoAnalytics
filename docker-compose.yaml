@@ -23,7 +23,6 @@ services:
     # To capture from a webcam, uncomment the next lines
     # devices:
     #  - /dev/video0:/dev/video0
-    # command: ['capture.py', '--url', 'redis://redisedge:6379']
     command: ['capture.py', '--url', 'redis://redisedge:6379', 'data/countvoncount.mp4']
    
   prometheus:
@@ -38,9 +37,17 @@ services:
     ports:
       - 9201:9201
     command: ['-redis-address', 'redisedge:6379', '-web.listen-address', '0.0.0.0:9201']
+  #grafana:
+  #  build: ./grafana
+  #  depends_on:
+  #    - prometheus
+  #  ports:
+  #    - 3000:3000
   grafana:
-    build: ./grafana
+    image: ajeetraina/grafana-redisedge
+    environment:
+      - GF_INSTALL_PLUGINS=redis-datasource
     depends_on:
       - prometheus
     ports:
-      - 3000:3000
+      - 3000:300
