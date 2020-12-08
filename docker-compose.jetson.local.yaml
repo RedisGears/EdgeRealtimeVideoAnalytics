@@ -1,0 +1,56 @@
+version: '3'
+services:
+  init:
+    build:
+      context: ./app
+      dockerfile: Dockerfile.jetson
+    network_mode: host
+    command: ['init.py', '--url', 'redis://localhost:6379']
+  server:
+    build:
+      context: ./app
+      dockerfile: Dockerfile.jetson
+    network_mode: host
+    depends_on:
+      - init
+#    ports:
+#      - 5000:5000
+    command: ['server.py', '--url', 'redis://localhost:6379']
+  capture:
+    build:
+      context: ./app
+      dockerfile: Dockerfile.jetson
+    network_mode: host
+    depends_on:
+      - init
+    # To capture from a webcam, uncomment the next lines
+    # devices:
+    #  - /dev/video0:/dev/video0
+    # command: ['capture.py', '--url', 'redis://localhost:6379']
+    command: ['capture.py', '--url', 'redis://localhost:6379', 'data/countvoncount.mp4']
+  
+  prometheus:
+    build:
+      context: ./prometheus
+      dockerfile: Dockerfile-local
+    network_mode: host
+#    ports:
+#      - 9090:9090
+  prometheus-redistimeseries-adapter:
+    image: redisfab/prometheus-redistimeseries-adapter:master-arm64v8-alpine
+    # TODO: freeze version
+    network_mode: host
+    depends_on:
+      - prometheus
+#    ports:
+#      - 9201:9201
+    command: ['-redis-address', 'localhost:6379', '-web.listen-address', '0.0.0.0:9201']
+  grafana:
+    build:
+      context: ./grafana
+      dockerfile: Dockerfile-local
+    network_mode: host
+    depends_on:
+      - prometheus
+#    ports:
+#      - 3000:3000

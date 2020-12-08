@@ -1,4 +1,4 @@
-FROM prom/prometheus:v2.8.0
+FROM prom/prometheus:v2.23.0
 
 ADD ./config-local.yml /etc/prometheus/config.yml
 

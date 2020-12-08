@@ -9,24 +9,24 @@ services:
     network_mode: host
     depends_on:
       - init
-    ports:
-      - 5000:5000
+    # ports:
+    #   - 5000:5000
     command: ['server.py', '--url', 'redis://localhost:6379']
   prometheus:
     build:
       context: ./prometheus
       dockerfile: Dockerfile-local
     network_mode: host
-    ports:
-      - 9090:9090
+    # ports:
+    #   - 9090:9090
   prometheus-redistimeseries-adapter:
     image: redislabs/prometheus-redistimeseries-adapter:master
     # TODO: freeze version
     network_mode: host
     depends_on:
       - prometheus
-    ports:
-      - 9201:9201
+    # ports:
+    #   - 9201:9201
     command: ['-redis-address', 'localhost:6379', '-web.listen-address', '0.0.0.0:9201']
   grafana:
     build:
@@ -35,5 +35,5 @@ services:
     network_mode: host
     depends_on:
       - prometheus
-    ports:
-      - 3000:3000
+    # ports:
+    #   - 3000:3000

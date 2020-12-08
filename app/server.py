@@ -2,6 +2,7 @@
 import argparse
 import cv2
 import io
+import time
 import numpy as np
 import redis
 from urllib.parse import urlparse
@@ -48,6 +49,9 @@ class RedisImageStream(object):
 def gen(stream):
     while True:
         frame = stream.get_last()
+        if frame is None:
+            time.sleep(0.1)
+            continue
         yield (b'--frame\r\n'
                b'Pragma-directive: no-cache\r\n'
                b'Cache-directive: no-cache\r\n'

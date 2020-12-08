@@ -1,6 +1,7 @@
-FROM redisfab/redisedgevision:0.4.0-x64-bionic
+FROM redisfab/redisedgevision:0.4.0-jetson-arm64v8-bionic
+
+ENV NVIDIA_VISIBLE_DEVICES=all
 
 ADD ./redisedge.conf /usr/local/etc/redisedge.conf
 
 CMD ["/usr/local/etc/redisedge.conf"]
-

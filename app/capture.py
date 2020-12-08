@@ -36,7 +36,7 @@ class Video:
         else:
             self.fps = self.cam.get(cv2.CAP_PROP_FPS)
             self.sma = SimpleMovingAverage(value=0.1, count=19)
- 
+
     def __iter__(self):
         self.count = -1
         return self
@@ -48,7 +48,7 @@ class Video:
         if self.isFile:
             delta = time.time() - self.ts
             self.sma.add(delta)
-            time.sleep(max(0,(1.0 - self.sma.current*self.fps)/self.fps))
+            time.sleep(max(0,(1.0 - self.sma.current*self.fps)/(self.fps+1)))
             self.ts = time.time()
 
         # Read image
@@ -81,6 +81,8 @@ if __name__ == '__main__':
     parser.add_argument('--maxlen', help='Maximum length of output stream', type=int, default=10000)
     args = parser.parse_args()
 
+    if args.verbose:
+        print("Starting capture service: {}fps".format(self.fps))
     # Set up Redis connection
     url = urlparse(args.url)
     conn = redis.Redis(host=url.hostname, port=url.port)
