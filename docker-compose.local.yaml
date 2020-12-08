@@ -4,6 +4,7 @@ services:
     build: ./app
     network_mode: host
     command: ['init.py', '--url', 'redis://localhost:6379']
+
   server:
     build: ./app
     network_mode: host
@@ -12,6 +13,7 @@ services:
     # ports:
     #   - 5000:5000
     command: ['server.py', '--url', 'redis://localhost:6379']
+
   capture:
     build: ./app
     network_mode: host
@@ -22,7 +24,7 @@ services:
     #  - /dev/video0:/dev/video0
     # command: ['capture.py', '--url', 'redis://localhost:6379']
     command: ['capture.py', '--url', 'redis://localhost:6379', 'data/countvoncount.mp4']
-  
+
   prometheus:
     build:
       context: ./prometheus
@@ -30,6 +32,7 @@ services:
     network_mode: host
     # ports:
     #   - 9090:9090
+
   prometheus-redistimeseries-adapter:
     image: redislabs/prometheus-redistimeseries-adapter:master
     # TODO: freeze version
@@ -39,6 +42,7 @@ services:
     # ports:
     #   - 9201:9201
     command: ['-redis-address', 'localhost:6379', '-web.listen-address', '0.0.0.0:9201']
+
   grafana:
     build:
       context: ./grafana

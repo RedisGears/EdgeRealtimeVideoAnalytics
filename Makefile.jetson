@@ -6,13 +6,13 @@ GPU_DOCKER=nvidia-docker
 GPU_OPT=--gpus all
 
 start-edge:
-	@$(DOCKER) run --rm --name edge --network host -it $(GPU_OPT) $(DEMO_STEM)_redisedge:latest
+	@$(GPU_DOCKER) run --rm --name edge --network host -it $(GPU_OPT) $(DEMO_STEM)_redisedge:latest
 
 start:
 	@docker-compose -f $(SPEC) up
 
 start-all:
-	@$(DOCKER) run --rm -d --name edge --network host -it $(GPU_OPT) $(DEMO_STEM)_redisedge:latest
+	@$(GPU_DOCKER) run --rm -d --name edge --network host -it $(GPU_OPT) $(DEMO_STEM)_redisedge:latest
 	@docker-compose -f $(SPEC) up -d --force-recreate
 
 stop-all:
@@ -23,7 +23,8 @@ logs:
 	@docker logs edge
 
 build:
-	@docker-compose -f docker-compose.jetson.yaml build
+	@docker-compose -f $(SPEC) build
+	@docker-compose -f $(SPEC) build redisedge
 
 setup:
 	@git lfs install; git lfs fetch; git lfs checkout
