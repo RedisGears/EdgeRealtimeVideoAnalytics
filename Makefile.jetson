@@ -5,6 +5,8 @@ SUDO=sudo
 GPU_DOCKER=nvidia-docker
 GPU_OPT=--gpus all
 
+IMAGES=capture init server prometheus grafana redisedge
+
 start-edge:
 	@$(GPU_DOCKER) run --rm --name edge --network host -it $(GPU_OPT) $(DEMO_STEM)_redisedge:latest
 
@@ -25,6 +27,9 @@ logs:
 build:
 	@docker-compose -f $(SPEC) build
 	@docker-compose -f $(SPEC) build redisedge
+
+clean:
+	@docker rmi $(foreach x,$(IMAGES),$(DEMO_STEM)_$(x):latest)
 
 setup:
 	@git lfs install; git lfs fetch; git lfs checkout
