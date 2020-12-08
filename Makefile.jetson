@@ -1,6 +1,6 @@
 
 DEMO_STEM=edgerealtimevideoanalytics
-SPEC=docker-compose.local.yaml
+SPEC=docker-compose.jetson.local.yaml
 SUDO=sudo
 
 start-edge:
@@ -11,7 +11,7 @@ start:
 
 start-all:
 	@nvidia-docker run --rm -d --name edge --network host -it --gpus all $(DEMO_STEM)_redisedge:latest
-	@docker-compose -f $(SPEC) up -d
+	@docker-compose -f $(SPEC) up -d --force-recreate
 
 stop-all:
 	@docker-compose -f $(SPEC) down
@@ -24,6 +24,7 @@ build:
 	@docker-compose -f docker-compose.jetson.yaml build
 
 setup:
+	@git lfs install; git lfs fetch; git lfs checkout
 	@$(SUDO) ./sbin/getcompose
 	@python3 -m pip install jetson-stats
 	@$(SUDO) systemctl restart jetson_stats.service
