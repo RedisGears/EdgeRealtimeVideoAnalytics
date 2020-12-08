@@ -12,6 +12,17 @@ services:
     # ports:
     #   - 5000:5000
     command: ['server.py', '--url', 'redis://localhost:6379']
+  capture:
+    build: ./app
+    network_mode: host
+    depends_on:
+      - init
+    # To capture from a webcam, uncomment the next lines
+    # devices:
+    #  - /dev/video0:/dev/video0
+    # command: ['capture.py', '--url', 'redis://localhost:6379']
+    command: ['capture.py', '--url', 'redis://localhost:6379', 'data/countvoncount.mp4']
+  
   prometheus:
     build:
       context: ./prometheus

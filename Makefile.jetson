@@ -2,15 +2,17 @@
 DEMO_STEM=edgerealtimevideoanalytics
 SPEC=docker-compose.jetson.local.yaml
 SUDO=sudo
+GPU_DOCKER=nvidia-docker
+GPU_OPT=--gpus all
 
 start-edge:
-	@nvidia-docker run --rm --name edge --network host -it --gpus all $(DEMO_STEM)_redisedge:latest
+	@$(DOCKER) run --rm --name edge --network host -it $(GPU_OPT) $(DEMO_STEM)_redisedge:latest
 
 start:
 	@docker-compose -f $(SPEC) up
 
 start-all:
-	@nvidia-docker run --rm -d --name edge --network host -it --gpus all $(DEMO_STEM)_redisedge:latest
+	@$(DOCKER) run --rm -d --name edge --network host -it $(GPU_OPT) $(DEMO_STEM)_redisedge:latest
 	@docker-compose -f $(SPEC) up -d --force-recreate
 
 stop-all:

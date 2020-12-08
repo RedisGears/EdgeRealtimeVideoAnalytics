@@ -34,16 +34,16 @@ services:
       context: ./prometheus
       dockerfile: Dockerfile-local
     network_mode: host
-#    ports:
-#      - 9090:9090
+    # ports:
+    #   - 9090:9090
   prometheus-redistimeseries-adapter:
     image: redisfab/prometheus-redistimeseries-adapter:master-arm64v8-alpine
     # TODO: freeze version
     network_mode: host
     depends_on:
       - prometheus
-#    ports:
-#      - 9201:9201
+    # ports:
+    #   - 9201:9201
     command: ['-redis-address', 'localhost:6379', '-web.listen-address', '0.0.0.0:9201']
   grafana:
     build:
@@ -52,5 +52,5 @@ services:
     network_mode: host
     depends_on:
       - prometheus
-#    ports:
-#      - 3000:3000
+    # ports:
+    #   - 3000:3000
