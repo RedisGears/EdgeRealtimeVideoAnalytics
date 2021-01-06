@@ -14,7 +14,7 @@ services:
       dockerfile: Dockerfile.jetson
     depends_on:
       - redisedge
-    command: ['init.py', '--url', 'redis://redisedge:6379']
+    command: ['init.py', '--url', 'redis://redisedge:6379', '--device', 'GPU']
   server:
     build:
       context: ./app

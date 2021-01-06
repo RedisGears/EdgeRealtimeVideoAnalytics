@@ -6,14 +6,19 @@ from urllib.parse import urlparse
 if __name__ == '__main__':
     # Parse arguments
     parser = argparse.ArgumentParser()
-    parser.add_argument('-d', '--device', help='CPU or GPU', type=str, default='CPU')
-    parser.add_argument('-i', '--camera_id', help='Input video stream key camera ID', type=str, default='0')
-    parser.add_argument('-p', '--camera_prefix', help='Input video stream key prefix', type=str, default='camera')
-    parser.add_argument('-u', '--url', help='RedisEdge URL', type=str, default='redis://127.0.0.1:6379')
+    parser.add_argument('-d', '--device', help='CPU or GPU',
+                        type=str, default='CPU')
+    parser.add_argument(
+        '-i', '--camera_id', help='Input video stream key camera ID', type=str, default='0')
+    parser.add_argument('-p', '--camera_prefix',
+                        help='Input video stream key prefix', type=str, default='camera')
+    parser.add_argument('-u', '--url', help='RedisEdge URL',
+                        type=str, default='redis://127.0.0.1:6379')
     args = parser.parse_args()
 
     # Set up some vars
-    input_stream_key = '{}:{}'.format(args.camera_prefix, args.camera_id)  # Input video stream key name
+    input_stream_key = '{}:{}'.format(
+        args.camera_prefix, args.camera_id)  # Input video stream key name
     initialized_key = '{}:initialized'.format(input_stream_key)
 
     # Set up Redis connection
@@ -30,44 +35,55 @@ if __name__ == '__main__':
 
     # Load the RedisAI model
     print('Loading model - ', end='')
-    with open('models/tiny-yolo-voc.pb', 'rb') as f:
+    with open('models/yolov3-tiny.torchscript.pt', 'rb') as f:
         model = f.read()
-        res = conn.execute_command('AI.MODELSET', 'yolo:model', 'TF', args.device, 'INPUTS', 'input', 'OUTPUTS', 'output', 'BLOB', model)
+        res = conn.execute_command('AI.MODELSET', 'yolo:model', 'torch',
+                                   args.device, 'INPUTS', 'input', 'OUTPUTS', 'output', 'BLOB', model)
         print(res)
 
     # Load the PyTorch post processing boxes script
     print('Loading script - ', end='')
     with open('yolo_boxes.py', 'rb') as f:
         script = f.read()
-        res = conn.execute_command('AI.SCRIPTSET', 'model', args.device, 'TAG', 'yolo:script', 'SOURCE', script)
+        res = conn.execute_command(
+            'AI.SCRIPTSET', 'model', args.device, 'TAG', 'yolo:script', 'SOURCE', script)
         print(res)
 
     print('Creating timeseries keys and downsampling rules - ', end='')
-    res = []                                                             # RedisTimeSeries replies list
-    labels = ['LABELS', args.camera_prefix, args.camera_id, '__name__']  # A generic list of timeseries keys labels
+    # RedisTimeSeries replies list
+    res = []
+    labels = ['LABELS', args.camera_prefix, args.camera_id,
+              '__name__']  # A generic list of timeseries keys labels
     # Create the main timeseries key
-    res.append(conn.execute_command('TS.CREATE', '{}:people'.format(input_stream_key), *labels, 'people'))
+    res.append(conn.execute_command(
+        'TS.CREATE', '{}:people'.format(input_stream_key), *labels, 'people'))
     # Set up timeseries downsampling keys and rules
     wins = [1, 5, 15]             # Downsampling windows
     aggs = ['avg', 'min', 'max']  # Downsampling aggregates
     for w in wins:
         for a in aggs:
-            res.append(conn.execute_command('TS.CREATE', '{}:people:{}:{}m'.format(input_stream_key, a, w), *labels, 'people_{}_{}m'.format(a, w)))
-            res.append(conn.execute_command('TS.CREATERULE', '{}:people'.format(input_stream_key), '{}:people:{}:{}m'.format(input_stream_key, a, w), 'AGGREGATION', a, w*60))
+            res.append(conn.execute_command('TS.CREATE', '{}:people:{}:{}m'.format(
+                input_stream_key, a, w), *labels, 'people_{}_{}m'.format(a, w)))
+            res.append(conn.execute_command('TS.CREATERULE', '{}:people'.format(
+                input_stream_key), '{}:people:{}:{}m'.format(input_stream_key, a, w), 'AGGREGATION', a, w*60))
     # Set up fps timeseries keys
-    res.append(conn.execute_command('TS.CREATE', '{}:in_fps'.format(input_stream_key), *labels, 'in_fps'))
-    res.append(conn.execute_command('TS.CREATE', '{}:out_fps'.format(input_stream_key), *labels, 'out_fps'))
+    res.append(conn.execute_command(
+        'TS.CREATE', '{}:in_fps'.format(input_stream_key), *labels, 'in_fps'))
+    res.append(conn.execute_command('TS.CREATE', '{}:out_fps'.format(
+        input_stream_key), *labels, 'out_fps'))
     # Set up profiler timeseries keys
     metrics = ['read', 'resize', 'model', 'script', 'boxes', 'store', 'total']
     for m in metrics:
-        res.append(conn.execute_command('TS.CREATE', '{}:prf_{}'.format(input_stream_key,m), *labels, 'prf_{}'.format(m)))
+        res.append(conn.execute_command('TS.CREATE', '{}:prf_{}'.format(
+            input_stream_key, m), *labels, 'prf_{}'.format(m)))
     print(res)
 
     # Load the gear
     print('Loading gear - ', end='')
     with open('gear.py', 'rb') as f:
         gear = f.read()
-        res = conn.execute_command('RG.PYEXECUTE', gear) #, 'REQUIREMENTS', 'numpy==1.19.1', 'opencv-python==4.4.0.46', 'Pillow==8.0.1')
+        # , 'REQUIREMENTS', 'numpy==1.19.1', 'opencv-python==4.4.0.46', 'Pillow==8.0.1')
+        res = conn.execute_command('RG.PYEXECUTE', gear)
         print(res)
 
     # Lastly, set a key that indicates initialization has been performed

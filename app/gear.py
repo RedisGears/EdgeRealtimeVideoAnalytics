@@ -12,8 +12,10 @@ from redisgears import executeCommand as execute
 _mspf = 1000 / 10.0      # Msecs per frame (initialized with 10.0 FPS)
 _next_ts = 0             # Next timestamp to sample a frame
 
+
 class SimpleMovingAverage(object):
     ''' Simple moving average '''
+
     def __init__(self, value=0.0, count=7):
         '''
         @value - the initialization value
@@ -33,11 +35,13 @@ class SimpleMovingAverage(object):
         o = self.samples.pop()
         self.current = self.current + (v-o)/self.count
 
+
 class Profiler(object):
     ''' Mini profiler '''
     names = []  # Steps names in order
     data = {}   # ... and data
     last = None
+
     def __init__(self):
         pass
 
@@ -81,6 +85,7 @@ class Profiler(object):
         ''' Gets a step's value '''
         return self.data[name].current
 
+
 '''
 The profiler is used first and foremost for keeping track of the total (average) time it takes to process
 a frame - the information is required for setting the FPS dynamically. As a side benefit, it also provides
@@ -88,15 +93,20 @@ per step metrics.
 '''
 prf = Profiler()
 
+
 def downsampleStream(x):
     ''' Drops input frames to match FPS '''
     global _mspf, _next_ts
-    execute('TS.INCRBY', 'camera:0:in_fps', 1, 'RESET', 1)  # Store the input fps count
-    ts, _ = map(int, str(x['id']).split('-'))         # Extract the timestamp part from the message ID
+    execute('TS.INCRBY', 'camera:0:in_fps', 1,
+            'RESET', 1)  # Store the input fps count
+    # Extract the timestamp part from the message ID
+    ts, _ = map(int, str(x['id']).split('-'))
     sample_it = _next_ts <= ts
-    if sample_it:                                           # Drop frames until the next timestamp is in the present/past
+    # Drop frames until the next timestamp is in the present/past
+    if sample_it:
         _next_ts = ts + _mspf
     return sample_it
+
 
 def process_image(img, height):
     ''' Utility to resize a rectangular image to a padded square (letterbox) '''
@@ -109,10 +119,12 @@ def process_image(img, height):
     top, bottom = int(round(dh - 0.1)), int(round(dh + 0.1))
     left, right = int(round(dw - 0.1)), int(round(dw + 0.1))
     img = cv2.resize(img, new_shape, interpolation=cv2.INTER_LINEAR)
-    img = cv2.copyMakeBorder(img, top, bottom, left, right, cv2.BORDER_CONSTANT, value=color)
+    img = cv2.copyMakeBorder(img, top, bottom, left,
+                             right, cv2.BORDER_CONSTANT, value=color)
     img = np.asarray(img, dtype=np.float32)
     img /= 255.0                        # Normalize 0..255 to 0..1.00
     return img
+
 
 def runYolo(x):
     ''' Runs the model on an input image from the stream '''
@@ -133,7 +145,8 @@ def runYolo(x):
     image = process_image(numpy_img, IMG_SIZE)
     # log('tensor')
     img_ba = bytearray(image.tobytes())
-    image_tensor = redisAI.createTensorFromBlob('FLOAT', [1, IMG_SIZE, IMG_SIZE, 3], img_ba)
+    image_tensor = redisAI.createTensorFromBlob(
+        'FLOAT', [1, 3, IMG_SIZE, IMG_SIZE], img_ba)
     prf.add('resize')
 
     # log('model')
@@ -141,13 +154,14 @@ def runYolo(x):
     modelRunner = redisAI.createModelRunner('yolo:model')
     redisAI.modelRunnerAddInput(modelRunner, 'input', image_tensor)
     redisAI.modelRunnerAddOutput(modelRunner, 'output')
+    redisAI.modelRunnerAddOutput(modelRunner, 'output2')
     model_replies = redisAI.modelRunnerRun(modelRunner)
     model_output = model_replies[0]
     prf.add('model')
 
     # log('script')
     # The model's output is processed with a PyTorch script for non maxima suppression
-    scriptRunner = redisAI.createScriptRunner('model', 'boxes_from_tf')
+    scriptRunner = redisAI.createScriptRunner('model', 'boxes_from_torch')
     redisAI.scriptRunnerAddInput(scriptRunner, model_output)
     redisAI.scriptRunnerAddOutput(scriptRunner)
     script_reply = redisAI.scriptRunnerRun(scriptRunner)
@@ -156,16 +170,21 @@ def runYolo(x):
     # log('boxes')
     # The script outputs bounding boxes
     shape = redisAI.tensorGetDims(script_reply[0])
+    log(str(shape))
+
     buf = redisAI.tensorGetDataAsBlob(script_reply[0])
     boxes = np.frombuffer(buf, dtype=np.float32).reshape(shape)
 
     # Iterate boxes to extract the people
-    ratio = float(IMG_SIZE) / max(pil_image.width, pil_image.height)  # ratio = old / new
-    pad_x = (IMG_SIZE - pil_image.width * ratio) / 2                  # Width padding
-    pad_y = (IMG_SIZE - pil_image.height * ratio) / 2                 # Height padding
+    ratio = float(IMG_SIZE) / max(pil_image.width,
+                                  pil_image.height)  # ratio = old / new
+    pad_x = (IMG_SIZE - pil_image.width * ratio) / \
+        2                  # Width padding
+    pad_y = (IMG_SIZE - pil_image.height * ratio) / \
+        2                 # Height padding
     boxes_out = []
     people_count = 0
-    for box in boxes[0]:
+    for box in boxes:
         if box[4] == 0.0:  # Remove zero-confidence detections
             continue
         if box[-1] != 14:  # Ignore detections that aren't people
@@ -179,19 +198,21 @@ def runYolo(x):
         y2 = (IMG_SIZE * (box[1] + 0.5 * box[3]) - pad_y) / ratio
 
         # Store boxes as a flat list
-        boxes_out += [x1,y1,x2,y2]
+        boxes_out += [x1, y1, x2, y2]
     prf.add('boxes')
 
     return x['id'], people_count, boxes_out
 
+
 def storeResults(x):
     ''' Stores the results in Redis Stream and TimeSeries data structures '''
     global _mspf, prf
-    ref_id, people, boxes= x[0], int(x[1]), x[2]
+    ref_id, people, boxes = x[0], int(x[1]), x[2]
     ref_msec = int(str(ref_id).split('-')[0])
 
     # Store the output in its own stream
-    res_id = execute('XADD', 'camera:0:yolo', 'MAXLEN', '~', 1000, '*', 'ref', ref_id, 'boxes', boxes, 'people', people)
+    res_id = execute('XADD', 'camera:0:yolo', 'MAXLEN', '~',
+                     1000, '*', 'ref', ref_id, 'boxes', boxes, 'people', people)
 
     # Add a sample to the output people and fps timeseries
     res_msec = int(str(res_id).split('-')[0])
@@ -219,6 +240,7 @@ def storeResults(x):
         return 'And now there are are two!'
     else:
         return 'I counted {} people in the frame! Ah ah ah!'.format(people)
+
 
 # Create and register a gear that for each message in the stream
 gb = GearsBuilder('StreamReader')

@@ -5,7 +5,8 @@ services:
       context: ./app
       dockerfile: Dockerfile.jetson
     network_mode: host
-    command: ['init.py', '--url', 'redis://localhost:6379']
+    # command: ['init.py', '--url', 'redis://localhost:6379']
+    command: ['init.py', '--url', 'redis://localhost:6379', '--device', 'GPU']
 
   server:
     build:
