@@ -10,6 +10,8 @@ if __name__ == '__main__':
     parser.add_argument('-i', '--camera_id', help='Input video stream key camera ID', type=str, default='0')
     parser.add_argument('-p', '--camera_prefix', help='Input video stream key prefix', type=str, default='camera')
     parser.add_argument('-u', '--url', help='RedisEdge URL', type=str, default='redis://127.0.0.1:6379')
+    parser.add_argument('--with-requirements', action="store_true", help="Present requirements to Gears")
+    parser.add_argument('--no-requirements', action="store_true", help="Do not present requirements to Gears") 
     args = parser.parse_args()
 
     # Set up some vars
@@ -67,7 +69,10 @@ if __name__ == '__main__':
     print('Loading gear - ', end='')
     with open('gear.py', 'rb') as f:
         gear = f.read()
-        res = conn.execute_command('RG.PYEXECUTE', gear) #, 'REQUIREMENTS', 'numpy==1.19.1', 'opencv-python==4.4.0.46', 'Pillow==8.0.1')
+        if not args.no_requirements:
+            res = conn.execute_command('RG.PYEXECUTE', gear, 'REQUIREMENTS', 'numpy==1.19.1', 'opencv-python==4.4.0.46', 'Pillow==8.0.1')
+        else:
+            res = conn.execute_command('RG.PYEXECUTE', gear)
         print(res)
 
     # Lastly, set a key that indicates initialization has been performed

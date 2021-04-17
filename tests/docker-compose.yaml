@@ -1,0 +1,27 @@
+version: '3'
+services:
+  redisedge:
+    container_name: redisedge.pplcount
+    build: ../redisedge
+    ports:
+      - 6379:6379
+  init:
+    container_name: init.pplcount
+    build: ../app
+    depends_on:
+      - redisedge
+    command: ['init.py', '--url', 'redis://redisedge:6379']
+  server:
+    container_name: server.pplcount
+    build: ../app
+    depends_on:
+      - init
+    ports:
+      - 5000:5000
+    command: ['server.py', '--url', 'redis://redisedge:6379']
+  capture:
+    container_name: capture.pplcount
+    build: ../app
+    depends_on:
+      - init
+    command: ['capture.py', '--url', 'redis://redisedge:6379', 'data/countvoncount.mp4']

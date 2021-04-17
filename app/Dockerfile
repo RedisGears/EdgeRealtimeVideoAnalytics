@@ -1,9 +1,8 @@
-# FROM python:3.7.3
 FROM redisfab/redisedge-pylibs:0.4.0-x64-bionic
 
 WORKDIR /app
 ADD . /app
 
-RUN pip install -r requirements.txt
+RUN python3 -m pip install -r requirements.txt
 
 ENTRYPOINT [ "python3" ]

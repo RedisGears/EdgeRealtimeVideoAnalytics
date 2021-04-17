@@ -12,6 +12,9 @@ from redisgears import executeCommand as execute
 _mspf = 1000 / 10.0      # Msecs per frame (initialized with 10.0 FPS)
 _next_ts = 0             # Next timestamp to sample a frame
 
+def xlog(*args):
+    redisgears.executeCommand('xadd', 'log', '*', 'text', ' '.join(map(str, args))) 
+
 class SimpleMovingAverage(object):
     ''' Simple moving average '''
     def __init__(self, value=0.0, count=7):
