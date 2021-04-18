@@ -1,0 +1,5 @@
+#!/bin/bash
+
+if [[ -z $(command -v docker-compose) ]]; then
+	python3 -m pip install docker-compose
+fi

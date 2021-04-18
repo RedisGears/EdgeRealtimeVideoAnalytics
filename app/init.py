@@ -10,6 +10,8 @@ if __name__ == '__main__':
     parser.add_argument('-i', '--camera_id', help='Input video stream key camera ID', type=str, default='0')
     parser.add_argument('-p', '--camera_prefix', help='Input video stream key prefix', type=str, default='camera')
     parser.add_argument('-u', '--url', help='RedisEdge URL', type=str, default='redis://127.0.0.1:6379')
+    parser.add_argument('--with-requirements', action="store_true", help="Present requirements to Gears")
+    parser.add_argument('--no-requirements', action="store_true", help="Do not present requirements to Gears") 
     args = parser.parse_args()
 
     # Set up some vars
@@ -32,14 +34,14 @@ if __name__ == '__main__':
     print('Loading model - ', end='')
     with open('models/tiny-yolo-voc.pb', 'rb') as f:
         model = f.read()
-        res = conn.execute_command('AI.MODELSET', 'yolo:model', 'TF', args.device, 'INPUTS', 'input', 'OUTPUTS', 'output', model)
+        res = conn.execute_command('AI.MODELSET', 'yolo:model', 'TF', args.device, 'INPUTS', 'input', 'OUTPUTS', 'output', 'BLOB', model)
         print(res)
 
     # Load the PyTorch post processing boxes script
     print('Loading script - ', end='')
     with open('yolo_boxes.py', 'rb') as f:
         script = f.read()
-        res = conn.execute_command('AI.SCRIPTSET', 'yolo:script', args.device, script)
+        res = conn.execute_command('AI.SCRIPTSET', 'model', args.device, 'TAG', 'yolo:script', 'SOURCE', script)
         print(res)
 
     print('Creating timeseries keys and downsampling rules - ', end='')
@@ -67,9 +69,12 @@ if __name__ == '__main__':
     print('Loading gear - ', end='')
     with open('gear.py', 'rb') as f:
         gear = f.read()
-        res = conn.execute_command('RG.PYEXECUTE', gear)
+        if not args.no_requirements:
+            res = conn.execute_command('RG.PYEXECUTE', gear, 'REQUIREMENTS', 'numpy==1.19.1', 'opencv-python==4.4.0.46', 'Pillow==8.0.1')
+        else:
+            res = conn.execute_command('RG.PYEXECUTE', gear)
         print(res)
 
     # Lastly, set a key that indicates initialization has been performed
-    print('Flag initialization as done - ', end='') 
+    print('Flag initialization as done - ', end='')
     print(conn.set(initialized_key, 'most certainly.'))

@@ -12,6 +12,9 @@ from redisgears import executeCommand as execute
 _mspf = 1000 / 10.0      # Msecs per frame (initialized with 10.0 FPS)
 _next_ts = 0             # Next timestamp to sample a frame
 
+def xlog(*args):
+    redisgears.executeCommand('xadd', 'log', '*', 'text', ' '.join(map(str, args))) 
+
 class SimpleMovingAverage(object):
     ''' Simple moving average '''
     def __init__(self, value=0.0, count=7):
@@ -92,7 +95,7 @@ def downsampleStream(x):
     ''' Drops input frames to match FPS '''
     global _mspf, _next_ts
     execute('TS.INCRBY', 'camera:0:in_fps', 1, 'RESET', 1)  # Store the input fps count
-    ts, _ = map(int, str(x['streamId']).split('-'))         # Extract the timestamp part from the message ID
+    ts, _ = map(int, str(x['id']).split('-'))         # Extract the timestamp part from the message ID
     sample_it = _next_ts <= ts
     if sample_it:                                           # Drop frames until the next timestamp is in the present/past
         _next_ts = ts + _mspf
@@ -123,7 +126,7 @@ def runYolo(x):
     # log('read')
 
     # Read the image from the stream's message
-    buf = io.BytesIO(x['image'])
+    buf = io.BytesIO(x['value']['image'])
     pil_image = Image.open(buf)
     numpy_img = np.array(pil_image)
     prf.add('read')
@@ -147,7 +150,7 @@ def runYolo(x):
 
     # log('script')
     # The model's output is processed with a PyTorch script for non maxima suppression
-    scriptRunner = redisAI.createScriptRunner('yolo:script', 'boxes_from_tf')
+    scriptRunner = redisAI.createScriptRunner('model', 'boxes_from_tf')
     redisAI.scriptRunnerAddInput(scriptRunner, model_output)
     redisAI.scriptRunnerAddOutput(scriptRunner)
     script_reply = redisAI.scriptRunnerRun(scriptRunner)
@@ -155,8 +158,8 @@ def runYolo(x):
 
     # log('boxes')
     # The script outputs bounding boxes
-    shape = redisAI.tensorGetDims(script_reply)
-    buf = redisAI.tensorGetDataAsBlob(script_reply)
+    shape = redisAI.tensorGetDims(script_reply[0])
+    buf = redisAI.tensorGetDataAsBlob(script_reply[0])
     boxes = np.frombuffer(buf, dtype=np.float32).reshape(shape)
 
     # Iterate boxes to extract the people
@@ -182,7 +185,7 @@ def runYolo(x):
         boxes_out += [x1,y1,x2,y2]
     prf.add('boxes')
 
-    return x['streamId'], people_count, boxes_out
+    return x['id'], people_count, boxes_out
 
 def storeResults(x):
     ''' Stores the results in Redis Stream and TimeSeries data structures '''

@@ -1,0 +1,40 @@
+
+DEMO_STEM=edgerealtimevideoanalytics
+SPEC=docker-compose.jetson.local.yaml
+SUDO=sudo
+GPU_DOCKER=nvidia-docker
+GPU_OPT=--gpus all
+
+IMAGES=capture init server prometheus grafana redisedge
+
+start-edge:
+	@$(GPU_DOCKER) run --rm --name edge --network host -it $(GPU_OPT) $(DEMO_STEM)_redisedge:latest
+
+start:
+	@docker-compose -f $(SPEC) up
+
+start-all:
+	@$(GPU_DOCKER) run --rm -d --name edge --network host -it $(GPU_OPT) $(DEMO_STEM)_redisedge:latest
+	@docker-compose -f $(SPEC) up -d --force-recreate
+
+stop-all:
+	@docker-compose -f $(SPEC) down
+	@docker stop edge
+
+logs:
+	@docker logs edge
+
+build:
+	@docker-compose -f $(SPEC) build
+	@docker-compose -f docker-compose.jetson.yaml build redisedge
+
+clean:
+	@docker rmi $(foreach x,$(IMAGES),$(DEMO_STEM)_$(x):latest)
+
+setup:
+	@git lfs install; git lfs fetch; git lfs checkout
+	@$(SUDO) ./sbin/getcompose
+	@python3 -m pip install jetson-stats
+	@$(SUDO) systemctl restart jetson_stats.service
+
+.PHONY: start-edge start start-all stop stop-all logs build setup

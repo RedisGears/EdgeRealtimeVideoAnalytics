@@ -1,23 +1,33 @@
 version: '3'
 services:
   redisedge:
-    build: ./redisedge
+    build:
+      context: ./redisedge
+      dockerfile: Dockerfile.jetson
     ports:
       - 6379:6379
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
   init:
-    build: ./app
+    build:
+      context: ./app
+      dockerfile: Dockerfile.jetson
     depends_on:
       - redisedge
     command: ['init.py', '--url', 'redis://redisedge:6379']
   server:
-    build: ./app
+    build:
+      context: ./app
+      dockerfile: Dockerfile.jetson
     depends_on:
       - init
     ports:
       - 5000:5000
     command: ['server.py', '--url', 'redis://redisedge:6379']
   capture:
-    build: ./app
+    build:
+      context: ./app
+      dockerfile: Dockerfile.jetson
     depends_on:
       - init
     # To capture from a webcam, uncomment the next lines
@@ -31,7 +41,7 @@ services:
     ports:
       - 9090:9090
   prometheus-redistimeseries-adapter:
-    image: redislabs/prometheus-redistimeseries-adapter:master
+    image: redisfab/prometheus-redistimeseries-adapter:master-arm64v8-alpine
     # TODO: freeze version
     depends_on:
       - prometheus

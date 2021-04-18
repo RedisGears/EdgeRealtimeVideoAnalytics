@@ -1,4 +1,4 @@
-FROM redisfab/redisedge-pylibs:0.4.0-x64-bionic
+FROM redisfab/redisedge-pylibs:0.4.0-jetson-arm64v8-bionic
 
 WORKDIR /app
 ADD . /app

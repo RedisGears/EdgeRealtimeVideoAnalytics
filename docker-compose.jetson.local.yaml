@@ -1,12 +1,16 @@
 version: '3'
 services:
   init:
-    build: ./app
+    build:
+      context: ./app
+      dockerfile: Dockerfile.jetson
     network_mode: host
     command: ['init.py', '--url', 'redis://localhost:6379']
 
   server:
-    build: ./app
+    build:
+      context: ./app
+      dockerfile: Dockerfile.jetson
     network_mode: host
     depends_on:
       - init
@@ -15,7 +19,9 @@ services:
     command: ['server.py', '--url', 'redis://localhost:6379']
 
   capture:
-    build: ./app
+    build:
+      context: ./app
+      dockerfile: Dockerfile.jetson
     network_mode: host
     depends_on:
       - init
@@ -34,7 +40,7 @@ services:
     #   - 9090:9090
 
   prometheus-redistimeseries-adapter:
-    image: redislabs/prometheus-redistimeseries-adapter:master
+    image: redisfab/prometheus-redistimeseries-adapter:master-arm64v8-alpine
     # TODO: freeze version
     network_mode: host
     depends_on:
