@@ -9,7 +9,7 @@ commands:
             sudo apt-get -qq update -y
             sudo apt-get -q install -y ca-certificates curl wget make git
             (mkdir -p deps; cd deps; git clone https://github.com/RedisLabsModules/readies.git)
-            ./deps/readies/bin/getpy3
+            sudo ./deps/readies/bin/getpy3
 
 jobs:
   test:
@@ -22,7 +22,7 @@ jobs:
       - run:
           name: Install prerequisites
           command: |
-            ./deps/readies/bin/getredis -v6
+            sudo ./deps/readies/bin/getredis -v6
             sudo make setup
 
       - run:
