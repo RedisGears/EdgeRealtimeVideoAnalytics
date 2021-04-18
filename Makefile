@@ -53,8 +53,9 @@ build:
 	@docker-compose -f docker-compose.yaml build
 
 setup:
-	@git lfs install; git lfs fetch; git lfs checkout
 	@$(SUDO) ./sbin/getcompose
+	@$(SUDO) ./sbin/getgitlfs
+	@git lfs install; git lfs fetch; git lfs checkout
 
 test:
 	@./tests/pplcount.sh

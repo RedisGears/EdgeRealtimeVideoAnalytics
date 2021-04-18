@@ -1,0 +1,36 @@
+#!/bin/bash
+
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
+
+GITLFS_VER=2.13.3
+
+OS=`uname -s`
+if [[ $OS == Linux ]]; then
+	OS=linux
+elif [[ $ARCH == Darwin ]]; then
+	OS=darwin
+elif [[ $ARCH == FreBSD ]]; then
+	OS=freebsd
+else
+	echo "$OS: unsupported"
+fi
+
+ARCH=`uname -m`
+if [[ $ARCH == x86_64 ]]; then
+	ARCH=amd64
+elif [[ $ARCH == aarch64 ]]; then
+	ARCH=arm64
+elif [[ $ARCH == armv7l ]]; then
+	ARCH=arm
+else
+	echo "$ARCH: unsupported"
+	exit 1
+fi
+
+dir=$(mktemp -d /tmp/gitlfs.XXXXXX)
+wget -q -O $dir/git-lfs.tar.gz https://github.com/git-lfs/git-lfs/releases/download/v${GITLFS_VER}/git-lfs-${OS}-${ARCH}-v${GITLFS_VER}.tar.gz
+cd $dir
+tar xf git-lfs.tar.gz
+./install.sh
+cd $HERE
+rm -rf $dir
