@@ -9,13 +9,13 @@ commands:
             sudo apt-get -qq update -y
             sudo apt-get -q install -y ca-certificates curl wget make git
             (mkdir -p deps; cd deps; git clone https://github.com/RedisLabsModules/readies.git)
-            sudo ./deps/readies/bin/getpy3
+            sudo FORCE=1 ./deps/readies/bin/getpy3
 
 jobs:
   test:
     machine:
       enabled: true
-      image: ubuntu-1604:202010-01
+      image: cimg/base:2020.01
     steps:
       - checkout
       - setup-automation
