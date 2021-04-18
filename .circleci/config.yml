@@ -15,7 +15,7 @@ jobs:
   test:
     machine:
       enabled: true
-      image: cimg/base:2020.01
+      image: cimg/base:2021.04
     steps:
       - checkout
       - setup-automation
