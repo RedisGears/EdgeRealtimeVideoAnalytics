@@ -4,19 +4,20 @@ jobs:
   test:
     machine:
       enabled: true
-      image: ubuntu-1604:201903-01
+      image: ubuntu-1604:202010-01
     steps:
       - checkout
       - run:
           name: System Setup
           command: |
             sudo apt-get -qq update -y
-            sudo apt-get -q install -y curl ca-certificates wget make 
+            sudo apt-get -q install -y curl ca-certificates wget make
+            sudo make setup
 
       - run:
-          name: Docker up
+          name: Test
           command: |
-            docker-compose up -d
+            make test VERBOSE=1
 
 workflows:
   version: 2
