@@ -1,5 +1,16 @@
 version: 2.1
 
+commands:
+  setup-automation:
+    steps:
+      - run:
+          name: Setup automation
+          command: |
+            sudo apt-get -qq update -y
+            sudo apt-get -q install -y ca-certificates curl wget make git
+            (mkdir -p deps; cd deps; git clone https://github.com/RedisLabsModules/readies.git)
+            ./deps/readies/bin/getpy3
+
 jobs:
   test:
     machine:
@@ -7,11 +18,11 @@ jobs:
       image: ubuntu-1604:202010-01
     steps:
       - checkout
+      - setup-automation
       - run:
-          name: System Setup
+          name: Install prerequisites
           command: |
-            sudo apt-get -qq update -y
-            sudo apt-get -q install -y curl ca-certificates wget make
+            ./deps/readies/bin/getredis -v6
             sudo make setup
 
       - run:
