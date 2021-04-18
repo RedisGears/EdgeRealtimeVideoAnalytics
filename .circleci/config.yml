@@ -15,7 +15,7 @@ jobs:
   test:
     machine:
       enabled: true
-      image: cimg/base:2021.04
+      image: ubuntu-2004:202010-01
     steps:
       - checkout
       - setup-automation
