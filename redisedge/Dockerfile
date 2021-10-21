@@ -5,6 +5,7 @@ RUN set -ex; \
     apt-get update; \
     apt-get install -y --no-install-recommends $DEPS;
 
+RUN pip install --upgrade pip
 RUN set -ex; \
     pip3 install -U pipenv;
 
