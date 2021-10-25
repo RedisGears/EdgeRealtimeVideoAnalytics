@@ -13,7 +13,7 @@ class RedisImageStream(object):
         self.conn = conn
         self.camera = args.camera
         self.boxes = args.boxes
-        self.field = args.field.encode('utf-8') 
+        self.field = args.field.encode('utf-8')
 
     def get_last(self):
         ''' Gets latest from camera and model '''
@@ -48,6 +48,8 @@ class RedisImageStream(object):
 def gen(stream):
     while True:
         frame = stream.get_last()
+        if frame is None:
+            break
         yield (b'--frame\r\n'
                b'Pragma-directive: no-cache\r\n'
                b'Cache-directive: no-cache\r\n'
@@ -79,5 +81,5 @@ if __name__ == '__main__':
     conn = redis.Redis(host=url.hostname, port=url.port)
     if not conn.ping():
         raise Exception('Redis unavailable')
-    
+
     app.run(host='0.0.0.0')
