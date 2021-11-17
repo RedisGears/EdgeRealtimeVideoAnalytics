@@ -9,5 +9,6 @@ RUN apt-get remove -y python3-opencv
 RUN pip install --upgrade pip
 RUN set -ex; \
     pip install -r requirements.txt;
+RUN rm -rf ~/.cache/pip /var/cache/apt/
 
 ENTRYPOINT [ "python3" ]
