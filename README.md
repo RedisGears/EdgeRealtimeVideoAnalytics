@@ -63,17 +63,6 @@ Refer to the build/installation instructions of the following projects to set up
 * [RedisTimeSeries](https://oss.redislabs.com/redistimeseries/)
 * [RedisAI](https://oss.redislabs.com/redisai/)
 
-Note that you'll also need to install the Pythonic [`requirements.txt`](/redisedge/requirements.txt) for the embedded RedisGears Python interpreter. Here's how:
-1. Verify that your host has OpenCV for Python2.7 - if not, install it (`apt-get install python-opencv`)
-  1. From your host's command line run the Python 2 interpreter with `python2`
-  2. Type `import cv2` - if this succeeds then OpenCV is installed
-  3. Type `cv2.__file__` - you should get something like '/usr/lib/python2.7/dist-packages/cv2.x86_64-linux-gnu.so'
-  4. Exit the python interpreter (CTRL-D)
-2. Go to `/opt/redislabs/lib/modules/python27/.venv/lib/python2.7/site-packages`
-3. Create a soft link like so: `ln -s /usr/lib/python2.7/dist-packages/cv2.x86_64-linux-gnu.so cv2.so`
-4. Go to `/opt/redislabs/lib/modules/python27`
-5. Install the rest of the requirements with `pipenv install numpy pillow`
-
 ### (optional) Prometheus and Grafana
 
 Refer to the build/installation instructions of the following projects to set up Prometheus, Grafana and the RedisTimeSeries adapter:

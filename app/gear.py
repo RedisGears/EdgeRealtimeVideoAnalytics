@@ -120,7 +120,7 @@ def runYolo(x):
     IMG_SIZE = 416     # Model's input image size
     prf.start()        # Start a new profiler iteration
 
-    # log('read')
+    log('read')
 
     # Read the image from the stream's message
     buf = io.BytesIO(x['value']['image'])
@@ -128,10 +128,10 @@ def runYolo(x):
     numpy_img = np.array(pil_image)
     prf.add('read')
 
-    # log('resize')
+    log('resize')
     # Resize, normalize and tensorize the image for the model (number of images, width, height, channels)
     image = process_image(numpy_img, IMG_SIZE)
-    # log('tensor')
+    log('tensor')
     img_ba = bytearray(image.tobytes())
     image_tensor = redisAI.createTensorFromBlob('FLOAT', [1, IMG_SIZE, IMG_SIZE, 3], img_ba)
     prf.add('resize')
@@ -145,7 +145,7 @@ def runYolo(x):
     model_output = model_replies[0]
     prf.add('model')
 
-    # log('script')
+    log('script')
     # The model's output is processed with a PyTorch script for non maxima suppression
     scriptRunner = redisAI.createScriptRunner('yolo:script', 'boxes_from_tf')
     redisAI.scriptRunnerAddInput(scriptRunner, model_output)
@@ -153,7 +153,7 @@ def runYolo(x):
     script_reply = redisAI.scriptRunnerRun(scriptRunner)
     prf.add('script')
 
-    # log('boxes')
+    log('boxes')
     # The script outputs bounding boxes
     shape = redisAI.tensorGetDims(script_reply)
     buf = redisAI.tensorGetDataAsBlob(script_reply)

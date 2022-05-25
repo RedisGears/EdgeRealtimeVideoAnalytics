@@ -79,8 +79,9 @@ def get_region_boxes(output):
     return boxes
 
 
-def boxes_from_tf(output):
-    boxes = get_region_boxes(output.permute(0, 3, 1, 2).contiguous())
+def boxes_from_tf(tensors: List[Tensor], keys: List[str], args: List[str]):
+    model_output = tensors[0]
+    boxes = get_region_boxes(model_output.permute(0, 3, 1, 2).contiguous())
     boxes = nms(boxes)
     return boxes
 

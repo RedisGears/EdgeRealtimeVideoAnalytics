@@ -4,6 +4,7 @@ WORKDIR /app
 ADD . /app
 
 RUN set -ex; \
+    pip install --upgrade pip; \
     pip install -r requirements.txt;
 
 ENTRYPOINT [ "python3" ]

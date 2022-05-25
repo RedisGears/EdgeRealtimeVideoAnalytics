@@ -32,14 +32,14 @@ if __name__ == '__main__':
     print('Loading model - ', end='')
     with open('models/tiny-yolo-voc.pb', 'rb') as f:
         model = f.read()
-        res = conn.execute_command('AI.MODELSET', 'yolo:model', 'TF', args.device, 'INPUTS', 'input', 'OUTPUTS', 'output', model)
+        res = conn.execute_command('AI.MODELSTORE', 'yolo:model', 'TF', args.device, 'INPUTS', 1,  'input', 'OUTPUTS', 1, 'output', 'BLOB', model)
         print(res)
 
     # Load the PyTorch post processing boxes script
     print('Loading script - ', end='')
     with open('yolo_boxes.py', 'rb') as f:
         script = f.read()
-        res = conn.execute_command('AI.SCRIPTSET', 'yolo:script', args.device, script)
+        res = conn.execute_command('AI.SCRIPTSTORE', 'yolo:script', args.device, 'ENTRY_POINTS', 1, 'boxes_from_tf', 'SOURCE', script)
         print(res)
 
     print('Creating timeseries keys and downsampling rules - ', end='')
@@ -72,7 +72,7 @@ if __name__ == '__main__':
     print('Loading gear - ', end='')
     with open('gear.py', 'rb') as f:
         gear = f.read()
-        res = conn.execute_command('RG.PYEXECUTE', gear, "REQUIREMENTS", "opencv-python", "Pillow")
+        res = conn.execute_command('RG.PYEXECUTE', gear, "REQUIREMENTS", "opencv-python-headless<4.5", "Pillow", "numpy")
         print(res)
 
     # Lastly, set a key that indicates initialization has been performed
