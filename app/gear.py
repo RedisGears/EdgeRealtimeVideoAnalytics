@@ -92,7 +92,7 @@ def downsampleStream(x):
     ''' Drops input frames to match FPS '''
     global _mspf, _next_ts
     execute('TS.INCRBY', 'camera:0:in_fps', 1, 'RESET', 1)  # Store the input fps count
-    ts, _ = map(int, str(x['streamId']).split('-'))         # Extract the timestamp part from the message ID
+    ts, _ = map(int, str(x['id']).split('-'))         # Extract the timestamp part from the message ID
     sample_it = _next_ts <= ts
     if sample_it:                                           # Drop frames until the next timestamp is in the present/past
         _next_ts = ts + _mspf
@@ -123,7 +123,7 @@ def runYolo(x):
     # log('read')
 
     # Read the image from the stream's message
-    buf = io.BytesIO(x['image'])
+    buf = io.BytesIO(x['value']['image'])
     pil_image = Image.open(buf)
     numpy_img = np.array(pil_image)
     prf.add('read')
@@ -150,7 +150,7 @@ def runYolo(x):
     scriptRunner = redisAI.createScriptRunner('yolo:script', 'boxes_from_tf')
     redisAI.scriptRunnerAddInput(scriptRunner, model_output)
     redisAI.scriptRunnerAddOutput(scriptRunner)
-    script_reply = redisAI.scriptRunnerRun(scriptRunner)
+    script_reply = redisAI.scriptRunnerRun(scriptRunner)[0]
     prf.add('script')
 
     # log('boxes')
@@ -182,7 +182,7 @@ def runYolo(x):
         boxes_out += [x1,y1,x2,y2]
     prf.add('boxes')
 
-    return x['streamId'], people_count, boxes_out
+    return x['id'], people_count, boxes_out
 
 def storeResults(x):
     ''' Stores the results in Redis Stream and TimeSeries data structures '''
