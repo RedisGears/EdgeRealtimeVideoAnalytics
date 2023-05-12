@@ -1,4 +1,4 @@
-Flask==1.0.2
+Flask==2.0.3
 numpy==1.16.3
 opencv-python>=4.0.1.23
 Pillow==8.3.2
