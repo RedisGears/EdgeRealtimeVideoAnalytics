@@ -1,4 +1,4 @@
-FROM grafana/grafana:6.1.2
+FROM grafana/grafana:6.7.5-ubuntu
 
 ADD ./config.ini /etc/grafana/config.ini
 ADD ./provisioning/dashboards /etc/grafana/provisioning/dashboards
